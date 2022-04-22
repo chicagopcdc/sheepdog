@@ -184,6 +184,10 @@ def check_resource_access(program, project, nodes):
             subject_submitter_ids.append({"id": node.node_id, "submitter_id": node.props.get("submitter_id", None)})
         else:
             for link in node._pg_links:
+                logger.info("LUCAAAAAAAA check resource access")
+                logger.info(node)
+                logger.info(link)
+                logger.info(getattr(node, link))
                 tmp_dad = getattr(node, link)[0]
                 nodeType = link
                 path_tmp = nodeType
@@ -216,7 +220,7 @@ def check_resource_access(program, project, nodes):
 def get_authorized_ids(program, project):
     try:
         mapping = flask.current_app.auth.auth_mapping(current_user.username)
-    except ArboristError as e:
+    except AuthZError as e:
         logger.warn(
             "Unable to retrieve auth mapping for user `{}`: {}".format(current_user.username, e)
         )
