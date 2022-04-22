@@ -184,10 +184,14 @@ def check_resource_access(program, project, nodes):
             subject_submitter_ids.append({"id": node.node_id, "submitter_id": node.props.get("submitter_id", None)})
         else:
             for link in node._pg_links:
-                logger.info("LUCAAAAAAAA check resource access")
+                logger.error("LUCAAAAAAAA check resource access")
+                print("LUCAAAAAAAA 1 check resource access")
                 logger.info(node)
+                print(node)
                 logger.info(link)
+                print(link)
                 logger.info(getattr(node, link))
+                print(getattr(node, link))
                 tmp_dad = getattr(node, link)[0]
                 nodeType = link
                 path_tmp = nodeType
