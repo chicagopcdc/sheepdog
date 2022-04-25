@@ -817,11 +817,34 @@ def export_all(node_label, project_id, file_format, db, without_id):
         # This is used to look up the classes for the linked nodes.
         # Now, fill out the properties lists from the titles.
         cls = psqlgraph.Node.get_subclass(node_label)
-        linked_props = make_linked_props(cls, titles_linked)
 
-        # Bui ld up the query. The query will contain, firstly, the node class,
+        # Create alias if joining on itself
+        recursive_node = '_TimingPartOfTiming_out'
+        edge = None
+        node_timing_dst = None
+        for link in cls._pg_links.values():
+            if link["edge_out"] == recursive_node:
+                titles_linked = [a for a in titles_linked if 'timings.' not in a]
+                edge = psqlgraph.Edge.get_unique_subclass("timing", "part_of", "timing")
+                # node_timing_dst = aliased(link["dst_type"])
+                # edges = psqlgraph.Edge.get_subclasses()
+                # edge = psqlgraph.Edge.get_subclass("timingpartoftiming")
+                # edge = psqlgraph.Edge.get_subclass(link["edge_out"])
+                # edge = psqlgraph.Edge.get_unique_subclass("timing", "part_of", "timing")
+                # print(edge)
+                # node_timing_dst = aliased(link["dst_type"])
+                # userSkillI = aliased(UserSkill)
+                # join(userSkillF, User.skills).\
+                # join(userSkillI, User.skills).\
+                node_timing_dst = aliased(link["dst_type"], name='node_timing_1')
+
+        linked_props = make_linked_props(cls, titles_linked)
+        
+
+        # Build up the query. The query will contain, firstly, the node class,
         # and secondly, all the relevant properties in linked nodes.
         query_args = [cls] + linked_props
+        query_args.extend([getattr(node_timing_dst, 'node_id'), getattr(node_timing_dst, 'submitter_id')] if node_timing_dst is not None else [])
         query = session.query(*query_args).prop("project_id", project_id)
 
         #add filter by id the user is authorized to access
@@ -831,25 +854,13 @@ def export_all(node_label, project_id, file_format, db, without_id):
 
         # Join the related node tables using the links.
         for link in cls._pg_links.values():
-            if link["edge_out"] != "_TimingPartOfTiming_out":
+            if link["edge_out"] != recursive_node:
                 query = (
                     query.outerjoin(link["edge_out"])
                     .outerjoin(link["dst_type"])
                     .order_by("src_id")
                 )
             else:
-                # edges = psqlgraph.Edge.get_subclasses()
-                # edge = psqlgraph.Edge.get_subclass("timingpartoftiming")
-                # edge = psqlgraph.Edge.get_subclass(link["edge_out"])
-                edge = psqlgraph.Edge.get_unique_subclass("timing", "part_of", "timing")
-                # print(edge)
-
-                node_timing_dst = aliased(link["dst_type"])
-                # userSkillI = aliased(UserSkill)
-
-                # join(userSkillF, User.skills).\
-                # join(userSkillI, User.skills).\
-
                 query = (
                     query.outerjoin(edge, cls.node_id==edge.src_id)
                     .outerjoin(node_timing_dst, node_timing_dst.node_id==edge.dst_id)
