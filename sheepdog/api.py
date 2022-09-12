@@ -89,6 +89,7 @@ def db_init(app):
         version=app.config["INDEX_CLIENT"]["version"],
         auth=app.config["INDEX_CLIENT"]["auth"],
     )
+    app.logger.info("Initialized index client")
 
 
 def migrate_database(app):
