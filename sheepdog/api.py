@@ -98,6 +98,7 @@ def db_init(app):
         version=app.config["INDEX_CLIENT"]["version"],
         auth=app.config["INDEX_CLIENT"]["auth"],
     )
+    app.logger.info("Initialized index client")
 
 
 def migrate_database(app):
@@ -161,7 +162,11 @@ def app_init(app):
     app.config["AUTH_NAMESPACE"] = "/" + os.getenv("AUTH_NAMESPACE", "").strip("/")
 
     app_register_blueprints(app)
-    db_init(app)
+    try:
+        db_init(app)
+    except e:
+        app.logger.error("db_init failed")
+        
     # exclude es init as it's not used yet
     # es_init(app)
     try:
