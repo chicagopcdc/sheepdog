@@ -50,8 +50,8 @@ RUN poetry config virtualenvs.create false \
 # copy source code ONLY after installing dependencies
 COPY . /$appname
 COPY ./deployment/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
-COPY ./bin/settings.py /var/www/$appname/settings.py
-COPY ./bin/confighelper.py /var/www/$appname/confighelper.py
+#COPY ./bin/settings.py /var/www/$appname/settings.py
+#COPY ./bin/confighelper.py /var/www/$appname/confighelper.py
 
 # install sheepdog
 RUN poetry config virtualenvs.create false \
