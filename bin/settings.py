@@ -47,7 +47,7 @@ config["PSQL_USER_DB_CONNECTION"] = "postgresql://%s:%s@%s:5432/%s" % tuple(
     ]
 )
 
-config["USER_API"] = "https://%s/user" % conf_data["hostname"]  # for use by authutils
+config["USER_API"] = "http://fence-service/"  # for use by authutils
 # use the USER_API URL instead of the public issuer URL to accquire JWT keys
 config["FORCE_ISSUER"] = True
 config["DICTIONARY_URL"] = environ.get(
