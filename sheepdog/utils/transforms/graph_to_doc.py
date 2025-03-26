@@ -188,7 +188,7 @@ def entity_to_template_str(label, file_format, **kwargs):
         writer = csv.writer(output, delimiter=DELIMITERS[file_format])
         writer.writerow(template)
         writer.writerow(tsv_example_row(label, template))
-        return output.getvalue()
+        return output.getvalue().encode("utf-8")
     else:
         raise UnsupportedError(file_format)
 
@@ -219,7 +219,7 @@ def get_json_template(entity_types):
 
 def get_delimited_template(entity_types, file_format, filename=TEMPLATE_NAME):
     """Return :param: `file_format` (TSV or CSV) template for entity types."""
-    tar_obj = io.StringIO()
+    tar_obj = io.BytesIO()
     tar = tarfile.open(filename, mode="w|gz", fileobj=tar_obj)
 
     for entity_type in entity_types:
@@ -227,7 +227,7 @@ def get_delimited_template(entity_types, file_format, filename=TEMPLATE_NAME):
         partname = "{}.{}".format(entity_type, file_format)
         tarinfo = tarfile.TarInfo(name=partname)
         tarinfo.size = len(content)
-        tar.addfile(tarinfo, io.StringIO(content))
+        tar.addfile(tarinfo, io.BytesIO(content))
 
     tar.close()
     return tar_obj.getvalue()
