@@ -218,23 +218,6 @@ def delete_resource_values(transaction=None, delete_project=False, delete_progra
         )
     else:
         for entity in transaction.json.get("entities", []):
-            #project
-            if entity["type"] == "project":
-                try:
-                    phsid = entity["unique_keys"][0]["phsid"]
-
-                    resource = "/programs/{}/projects/{}".format(
-                        transaction.program, phsid
-                    )
-                    flask.current_app.auth.delete_resource(
-                        path=resource
-                    )
-                    resource = "/programs/{}/projects/{}".format(
-                        transaction.program, transaction.project
-                    )
-                except KeyError:
-                    logger.error("Unable to delete resource for entity: {}".format(entity))
-                    continue
             #person
             if entity["type"] == flask.current_app.subject_entity.label:
                 try:
