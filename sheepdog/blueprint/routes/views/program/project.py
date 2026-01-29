@@ -19,7 +19,7 @@ from sheepdog import transactions
 from sheepdog import utils
 from sheepdog.errors import NotFoundError, UserError
 from sheepdog.globals import ROLES, STATES_COMITTABLE_DRY_RUN
-
+from sheepdog import auth
 
 def create_viewer(method, bulk=False, dry_run=False):
     """
@@ -1149,11 +1149,13 @@ def delete_project(program, project):
         transaction_args = dict(
             program=program, project=project, flask_config=flask.current_app.config
         )
-        with transactions.deletion.transaction.DeletionTransaction(
+        transaction = transactions.deletion.transaction.DeletionTransaction(
             **transaction_args
-        ) as trans:
+        )
+        with transaction as trans:
             session.delete(node)
             trans.claim_transaction_log()
             trans.write_transaction_log()
+            auth.delete_resource_values(trans, delete_project={"dbgap_accession_number": node.dbgap_accession_number, "code": node.code})
             session.commit()
             return flask.jsonify(trans.json), 204

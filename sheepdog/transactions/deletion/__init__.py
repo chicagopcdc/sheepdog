@@ -4,7 +4,7 @@ from sheepdog import utils
 from sheepdog.errors import UserError
 from sheepdog.globals import FLAG_IS_ASYNC
 from sheepdog.transactions.deletion.transaction import DeletionTransaction
-
+from sheepdog import auth
 
 def transaction_worker(transaction, ids):
     """
@@ -26,6 +26,9 @@ def transaction_worker(transaction, ids):
         finally:
             response = transaction.json
             code = transaction.status_code
+
+    if code == 200:
+        auth.delete_resource_values(transaction)
 
     return response, code
 

@@ -269,7 +269,7 @@ def delete_program(program):
             )
         session.delete(node)
         session.commit()
-
+        auth.delete_resource_values(delete_program={"dbgap_accession_number": node.dbgap_accession_number})
         return flask.jsonify({}), 204
 
 
