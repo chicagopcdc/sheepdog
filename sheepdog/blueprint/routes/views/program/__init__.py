@@ -136,7 +136,7 @@ def create_project(program):
                 "state": "active"
             }
     """
-    input_doc = flask.request.get_data().decode("utf-8")
+    input_doc = utils.parse.decode_request_body()
     content_type = flask.request.headers.get("Content-Type", "").lower()
     errors = None
     if content_type == "text/csv":
@@ -169,7 +169,7 @@ def create_project(program):
     # Parse dbgap accession number.
     phsid = doc.get("dbgap_accession_number")
     if not phsid:
-        raise UserError("No dbGaP accesion number specified.")
+        raise UserError("No dbgap_accession_number specified.")
 
     # Create base JSON document.
     res = None

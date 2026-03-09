@@ -430,7 +430,7 @@ def entity_to_template_delimited(links, schema, exclude_id):
 class ExportFile(object):
     """
     Export entities to tsv or csv or json.
-    An ExportFile should be intantiated and then call get_response to pass the
+    An ExportFile should be instantiated and then call get_response to pass the
     generator to flask response.
     """
 
@@ -843,7 +843,7 @@ def export_all(node_label, project_id, file_format, db, without_id):
         # and secondly, all the relevant properties in linked nodes.
         query_args = [cls] + linked_props
         query_args.extend([getattr(node_timing_dst, 'node_id'), getattr(node_timing_dst, 'submitter_id')] if node_timing_dst is not None else [])
-        query = session.query(*query_args).prop("project_id", project_id)
+        query = session.query(*query_args).filter(cls.project_id.astext == project_id)
 
         #add filter by id the user is authorized to access
         auth_ids = auth.get_authorized_ids(project_id.split('-')[0], project_id.split('-')[1])
