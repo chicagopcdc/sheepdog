@@ -161,7 +161,13 @@ def app_init(app):
     # ARBORIST deprecated, replaced by ARBORIST_URL
     arborist_url = os.environ.get("ARBORIST_URL", os.environ.get("ARBORIST"))
     if arborist_url:
-        app.auth = ArboristClient(arborist_base_url=arborist_url)
+        #TODO set env variable
+        # authz_timeout = int(os.getenv("GEN3_AUTHZ_TIMEOUT", "300"))
+        authz_timeout = 300
+        app.auth = ArboristClient(
+            arborist_base_url=arborist_url,
+            timeout=authz_timeout,
+        )
     else:
         app.logger.info("Using default Arborist base URL")
         app.auth = ArboristClient()
