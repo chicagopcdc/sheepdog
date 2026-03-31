@@ -16,11 +16,9 @@ from cdislogging import get_logger
 import flask
 import jwt
 import time
-
+from sheepdog.utils import get_node
 from sheepdog.errors import AuthNError, AuthZError
 from sheepdog.globals import ROLES
-
-
 logger = get_logger(__name__)
 CACHE_SECONDS = 1
 AUTHZ_CACHE = SimpleCache(default_timeout=CACHE_SECONDS)
@@ -198,6 +196,71 @@ def get_and_create_resource_values(resource, data):
                 resp.error.code, resp.error.message
             )
         )
+
+def delete_resource_values(transaction=None, delete_project=False, delete_program=False):
+    if delete_program:
+        resource = "/programs/{}".format(delete_program["dbgap_accession_number"])
+        flask.current_app.auth.delete_resource(
+            path=resource
+        )
+    elif delete_project:
+        resource = "/programs/{}/projects/{}".format(
+            transaction.program, delete_project["code"]
+        )
+        flask.current_app.auth.delete_resource(
+            path=resource
+        )
+        resource = "/programs/{}/projects/{}".format(
+            transaction.program, delete_project["dbgap_accession_number"]
+        )
+        flask.current_app.auth.delete_resource(
+            path=resource
+        )
+    else:
+        for entity in transaction.json.get("entities", []):
+            #person
+            if entity["type"] == flask.current_app.subject_entity.label:
+                try:
+                    # Prefer a direct submitter_id if present; fall back to unique_keys
+                    submitter_id = entity["unique_keys"][0]["submitter_id"]
+
+                    resource = "/programs/{}/projects/{}/persons/{}".format(
+                        transaction.program, transaction.project, submitter_id
+                    )
+                    flask.current_app.auth.delete_resource(
+                        path=resource
+                    )
+                except KeyError:
+                    logger.error("Unable to delete resource for entity: {}".format(entity))
+                    continue
+            #subject
+            elif entity["type"] == flask.current_app.node_authz_entity.label:
+                try:
+                    submitter_id = entity["unique_keys"][0]["submitter_id"]
+
+                    subject_node_id = entity["id"]
+
+                    persons = []
+
+                    for node in transaction.nodes:
+                        if node.node_id == subject_node_id:
+                            for subject_of_person_node in node.edges_out:
+                                persons.append(get_node(transaction.project_id, subject_of_person_node.dst_id))
+                    
+                    
+                            
+                    for person in persons:
+                        resource = "/programs/{}/projects/{}/persons/{}/subjects/{}".format(
+                            transaction.program, transaction.project, person.props.get("submitter_id", None), submitter_id
+                        )
+                        flask.current_app.auth.delete_resource(
+                            path=resource
+                        )
+
+
+                except KeyError:
+                    logger.error("Unable to delete resource for entity: {}".format(entity))
+                    continue
 
 
 def check_resource_access(program, project, nodes):
