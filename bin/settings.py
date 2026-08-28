@@ -55,8 +55,10 @@ config["PSQL_USER_DB_CONNECTION"] = "postgresql://%s:%s@%s:5432/%s" % (
     fence_database,
 )
 
-config["USER_API"] = "https://%s/user" % conf_data.get(
-    "hostname", os.environ.get("CONF_HOSTNAME", "localhost")
+config["USER_API"] = os.environ.get(
+    "USER_API",
+    "https://%s/user"
+    % conf_data.get("hostname", os.environ.get("CONF_HOSTNAME", "localhost")),
 )
 config["AUTHZ_AUDIENCE"] = "gen3"  # for use by authutils
 
