@@ -55,12 +55,23 @@ config["PSQL_USER_DB_CONNECTION"] = "postgresql://%s:%s@%s:5432/%s" % (
     fence_database,
 )
 
-config["USER_API"] = "https://%s/user" % conf_data.get(
+# Public-facing issuer URL: the `iss` claim Fence embeds in tokens and the URL
+# authutils uses for JWT issuer validation.
+_public_user_api = "https://%s/user" % conf_data.get(
     "hostname", os.environ.get("CONF_HOSTNAME", "localhost")
 )
+
+# USER_API may be overridden to an internal cluster URL (e.g.
+# http://fence-service/user) so JWKS key fetches stay within the cluster
+# network. When overridden it must differ from _public_user_api; OIDC_ISSUER
+# always stays as the public URL so validate_jwt's issuer check still passes.
+config["USER_API"] = os.environ.get("USER_API") or _public_user_api
+config["OIDC_ISSUER"] = _public_user_api
+
 config["AUTHZ_AUDIENCE"] = "gen3"  # for use by authutils
 
-# use the USER_API URL instead of the public issuer URL to accquire JWT keys
+# Direct key fetching to USER_API rather than the token's iss claim, allowing
+# an internal URL override to work even when iss carries the public URL.
 config["FORCE_ISSUER"] = True
 config["DICTIONARY_URL"] = os.environ.get(
     "DICTIONARY_URL",
