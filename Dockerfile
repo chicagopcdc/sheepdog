@@ -3,11 +3,15 @@ ARG AZLINUX_BASE_VERSION=master
 # Base stage with python-build-base
 FROM quay.io/cdis/amazonlinux-base:3.13-pythonnginx AS base
 
+USER root
+
 ENV appname=sheepdog
 
 WORKDIR /${appname}
 
 RUN chown -R gen3:gen3 /${appname}
+
+USER gen3
 
 # Builder stage
 FROM base AS builder

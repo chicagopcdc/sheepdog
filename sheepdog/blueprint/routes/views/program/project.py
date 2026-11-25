@@ -242,7 +242,6 @@ def get_project_dictionary_entry(program, project, entry):
 
 
 @utils.assert_program_exists
-@auth.authorize_for_project(ROLES["READ"])
 def get_entities_by_id(program, project, entity_id_string):
     """
     Retrieve existing entities by ID.
@@ -277,17 +276,23 @@ def get_entities_by_id(program, project, entity_id_string):
     :reqheader X-Auth-Token: |reqheader_X-Auth-Token|
     :resheader Content-Type: |resheader_Content-Type|
     """
+
     entity_ids = entity_id_string.split(",")
     # Authorization is granted on the project in the URL, so the lookup must be
     # confined to it
     project_id = "{}-{}".format(program, project)
     with flask.current_app.db.session_scope():
-        nodes = (
-            flask.current_app.db.nodes()
-            .ids(entity_ids)
-            .props(project_id=project_id)
-            .all()
-        )
+        dictionary_nodes = flask.current_app.db.nodes().ids(entity_ids).props(project_id=project_id).all()
+        project_nodes = flask.current_app.db.nodes(models.Project).ids(entity_ids).all()
+        program_nodes = flask.current_app.db.nodes(models.Program).ids(entity_ids).all()
+
+        nodes = []
+        nodes.extend(dictionary_nodes)
+        nodes.extend(project_nodes)
+        nodes.extend(program_nodes)
+
+        auth.check_resource_access(program, project, nodes)
+
         entities = {n.node_id: n for n in nodes}
         missing_entities = set(entity_ids) - set(entities.keys())
         if missing_entities:
@@ -363,7 +368,6 @@ def create_delete_entities_viewer(dry_run=False):
     return delete_entities
 
 
-@auth.authorize_for_project(ROLES["READ"])
 def export_entities(program, project):
     """
     Return a file with the requested entities as an attachment.
